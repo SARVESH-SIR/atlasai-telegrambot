@@ -833,12 +833,17 @@ async def post_init(application: Application):
 
 
 def main():
+    # Detect if running on Render (webhook mode) or locally (polling mode)
+    render_url = os.getenv("RENDER_EXTERNAL_URL")
+    
     app = (
         Application.builder()
         .token(TELEGRAM_TOKEN)
         .post_init(post_init)
         .build()
     )
+    
+    # Add handlers
     app.add_handler(CommandHandler("start",  cmd_start))
     app.add_handler(CommandHandler("help",   cmd_help))
     app.add_handler(CommandHandler("new",    cmd_new))
@@ -848,8 +853,27 @@ def main():
     app.add_handler(MessageHandler(filters.VOICE,        handle_voice))
     app.add_handler(MessageHandler(filters.Document.ALL, handle_document))
     app.add_handler(MessageHandler(filters.PHOTO,        handle_photo))
-    logger.info("🚀 Atlas AI polling started...")
-    app.run_polling(drop_pending_updates=True)
+    
+    if render_url:
+        # Webhook mode for Render
+        webhook_url = f"{render_url}/webhook"
+        webhook_secret = os.getenv("WEBHOOK_SECRET", "atlas-ai-webhook-secret-2026")
+        logger.info(f"🚀 Atlas AI webhook mode on Render: {webhook_url}")
+        
+        async def setup_webhook(application: Application):
+            await application.bot.delete_webhook(drop_pending_updates=True)
+            await application.bot.set_webhook(webhook_url, secret_token=webhook_secret)
+            logger.info("✅ Webhook set successfully")
+        
+        app.post_init = setup_webhook
+        app.run_webhook(
+            listen_port=10000,
+            secret_token=webhook_secret
+        )
+    else:
+        # Polling mode for local development
+        logger.info("🚀 Atlas AI polling started...")
+        app.run_polling(drop_pending_updates=True)
 
 
 if __name__ == "__main__":

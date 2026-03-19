@@ -8,7 +8,6 @@ services:
     plan: free
     buildCommand: "pip install -r requirements.txt"
     startCommand: "python bot.py"
-    healthCheckPath: /
     envVars:
       - key: TELEGRAM_BOT_TOKEN
         sync: false
@@ -16,9 +15,12 @@ services:
       - key: GEMINI_API_KEY
         sync: false
         description: "Your Google Gemini API Key from AI Studio"
+      - key: RENDER_EXTERNAL_URL
+        sync: false
+        description: "Render webhook URL (auto-filled)"
+      - key: WEBHOOK_SECRET
+        sync: false
+        description: "Webhook secret token for security"
+        defaultValue: "atlas-ai-webhook-secret-2026"
     autoDeploy: true
     region: oregon  # Choose your preferred region
-    disk:
-      name: atlas-ai-disk
-      mountPath: /app/data
-      sizeGB: 1

@@ -3,3 +3,4 @@ python-dotenv==1.2.1
 python-telegram-bot==22.6
 google-auth
 aiohttp
+flask==3.0.0
