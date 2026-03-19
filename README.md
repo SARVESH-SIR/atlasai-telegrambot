@@ -144,18 +144,53 @@ Try these commands to see multi-database search in action:
 
 ## ☁️ Deployment
 
-### Run on Server (24/7)
-```bash
-# Using screen
-screen -S atlas
-python bot.py
-# Ctrl+A then D to detach
+### 🚀 Render Deployment (Recommended) ⭐
 
-# Using systemd (recommended)
-sudo nano /etc/systemd/system/atlas-ai.service
+#### Step 1: Prepare Your Project
+1. **Create a GitHub repository** with your bot code
+2. **Ensure `.env` is in `.gitignore`** (don't commit secrets)
+3. **Add `render.yaml`** to your repository:
+
+```yaml
+# render.yaml
+services:
+  - type: web
+    name: atlas-ai-bot
+    env: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "python bot.py"
+    envVars:
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
 ```
 
-### Docker
+#### Step 2: Deploy to Render
+1. **Go to [render.com](https://render.com)** and sign up
+2. **Click "New +" → "Web Service"**
+3. **Connect your GitHub repository**
+4. **Configure deployment:**
+   - **Name**: `atlas-ai-bot`
+   - **Environment**: `Python 3`
+   - **Branch**: `main`
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `python bot.py`
+
+#### Step 3: Add Environment Variables
+In Render Dashboard → Your Service → Environment:
+```
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token
+GEMINI_API_KEY=your_gemini_api_key
+```
+
+#### Step 4: Deploy!
+- **Render will automatically build and deploy**
+- **Your bot will be live 24/7** with webhook URL
+- **Free tier includes** 750 hours/month
+
+### 🐳 Docker Deployment
 ```dockerfile
 FROM python:3.11-slim
 WORKDIR /app
@@ -169,6 +204,66 @@ CMD ["python", "bot.py"]
 docker build -t atlas-ai .
 docker run -d --name atlas-ai --env-file .env atlas-ai
 ```
+
+### 🖥️ Traditional Server (VPS/Dedicated)
+
+#### Using Screen
+```bash
+# Install screen
+sudo apt update && sudo apt install screen -y
+
+# Run bot in screen
+screen -S atlas
+python bot.py
+
+# Detach (Ctrl+A then D)
+# Reattach: screen -r atlas
+```
+
+#### Using Systemd (Recommended for 24/7)
+Create service file:
+```bash
+sudo nano /etc/systemd/system/atlas-ai.service
+```
+
+```ini
+[Unit]
+Description=Atlas AI Telegram Bot
+After=network.target
+
+[Service]
+Type=simple
+User=your_username
+WorkingDirectory=/path/to/atlas-ai-telegram
+Environment=TELEGRAM_BOT_TOKEN=your_token
+Environment=GEMINI_API_KEY=your_key
+ExecStart=/usr/bin/python3 /path/to/atlas-ai-telegram/bot.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```bash
+# Enable and start service
+sudo systemctl daemon-reload
+sudo systemctl enable atlas-ai
+sudo systemctl start atlas-ai
+
+# Check status
+sudo systemctl status atlas-ai
+```
+
+### 📱 Platform Comparison
+
+| Platform | Cost | Uptime | Setup | Best For |
+|----------|------|--------|-------|----------|
+| **Render** | Free tier available | 99.9% | ⭐⭐⭐⭐⭐ | Beginners, quick deployment |
+| **DigitalOcean** | $5-20/month | 99.99% | ⭐⭐⭐ | Full control, custom setup |
+| **Heroku** | $7+/month | 99.95% | ⭐⭐⭐⭐ | Easy deployment, dynos |
+| **AWS EC2** | $3-50/month | 99.99% | ⭐⭐ | Enterprise, scalability |
+| **VPS (Self)** | $2-10/month | Varies | ⭐ | Maximum control, learning |
 
 ## 📦 Requirements
 
